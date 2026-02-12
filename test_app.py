@@ -220,8 +220,9 @@ class TestFlaskApp(unittest.TestCase):
                                    content_type='application/json')
         
         self.assertEqual(response.status_code, 400)
-        # Verificar que se llamó al logger
-        self.assertTrue(mock_logger.info.called or mock_logger.warning.called)
+        # Verificar que se llamó al logger con warning para el parámetro faltante
+        self.assertTrue(mock_logger.info.called)  # Request reception
+        self.assertTrue(mock_logger.warning.called)  # Missing parameter warning
 
     @patch('app.logger')
     def test_health_endpoint_logs_telemetry(self, mock_logger):
