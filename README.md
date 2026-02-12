@@ -8,8 +8,9 @@ Esta aplicación Flask proporciona un endpoint POST `/query` que permite ejecuta
 
 ## Requisitos
 
-- Python 3.8 o superior
+- Python 3.12 o superior
 - Azure CosmosDB Account
+- Docker (opcional, para deployment en contenedores)
 
 ## Instalación
 
@@ -63,7 +64,67 @@ Si no se configura Application Insights, la aplicación funcionará normalmente 
 
 ## Uso
 
-### Iniciar la aplicación
+### Opción 1: Ejecutar con Docker (Recomendado para Producción)
+
+#### Construir la imagen
+
+```bash
+docker build -t askit-cosmosdb:latest .
+```
+
+#### Ejecutar el contenedor
+
+```bash
+docker run -d \
+  --name askit-cosmosdb \
+  -p 8000:8000 \
+  -e COSMOS_DB_ENDPOINT="https://your-account.documents.azure.com:443/" \
+  -e COSMOS_DB_KEY="your-primary-key" \
+  -e COSMOS_DB_DATABASE="your-database" \
+  askit-cosmosdb:latest
+```
+
+#### Configuración avanzada
+
+El contenedor soporta las siguientes variables de entorno para configuración:
+
+- **PORT** (default: 8000): Puerto en el que escucha la aplicación
+- **GUNICORN_WORKERS** (default: 4): Número de procesos workers de Gunicorn
+- **GUNICORN_THREADS** (default: 2): Número de threads por worker
+- **COSMOS_DB_ENDPOINT**: URL del endpoint de CosmosDB (requerido)
+- **COSMOS_DB_KEY**: Primary o Secondary Key de CosmosDB (requerido)
+- **COSMOS_DB_DATABASE**: Nombre de la base de datos (requerido)
+- **APPLICATIONINSIGHTS_CONNECTION_STRING**: Connection string de Application Insights (opcional)
+
+Ejemplo con configuración personalizada:
+
+```bash
+docker run -d \
+  --name askit-cosmosdb \
+  -p 9000:9000 \
+  -e PORT=9000 \
+  -e GUNICORN_WORKERS=8 \
+  -e GUNICORN_THREADS=4 \
+  -e COSMOS_DB_ENDPOINT="https://your-account.documents.azure.com:443/" \
+  -e COSMOS_DB_KEY="your-primary-key" \
+  -e COSMOS_DB_DATABASE="your-database" \
+  -e APPLICATIONINSIGHTS_CONNECTION_STRING="InstrumentationKey=..." \
+  askit-cosmosdb:latest
+```
+
+#### Verificar el estado del contenedor
+
+```bash
+# Ver logs
+docker logs askit-cosmosdb
+
+# Verificar health
+curl http://localhost:8000/health
+```
+
+### Opción 2: Ejecutar localmente con Python
+
+#### Iniciar la aplicación
 
 ```bash
 python app.py
@@ -80,7 +141,7 @@ La API cuenta con documentación interactiva generada automáticamente con OpenA
 - **GET /swagger.json**: Especificación OpenAPI en formato JSON
 - **GET /swagger**: Interfaz Swagger UI para explorar y probar la API de forma interactiva
 
-Accede a `http://localhost:5000/swagger` para explorar la documentación interactiva de la API.
+Accede a `http://localhost:5000/swagger` (o `http://localhost:8000/swagger` si usas Docker) para explorar la documentación interactiva de la API.
 
 #### POST /query
 
@@ -93,7 +154,16 @@ Ejecuta una consulta SQL contra un contenedor en CosmosDB.
 **Ejemplo de uso:**
 
 ```bash
+# Con Python local (puerto 5000)
 curl -X POST http://localhost:5000/query \
+  -H "Content-Type: application/json" \
+  -d '{
+    "contenedor": "mi-contenedor",
+    "query": "SELECT * FROM c WHERE c.status = '\''active'\''"
+  }'
+
+# Con Docker (puerto 8000)
+curl -X POST http://localhost:8000/query \
   -H "Content-Type: application/json" \
   -d '{
     "contenedor": "mi-contenedor",
@@ -174,8 +244,32 @@ python app.py
 ├── app.py              # Aplicación Flask principal
 ├── requirements.txt    # Dependencias Python
 ├── .env.example        # Plantilla de variables de entorno
+├── Dockerfile          # Dockerfile multi-stage optimizado para producción
+├── .dockerignore       # Archivos excluidos del build de Docker
 └── README.md          # Este archivo
 ```
+
+## Deployment en Producción
+
+### Docker
+
+La imagen Docker incluye las siguientes optimizaciones:
+
+- **Multi-stage build**: Reduce el tamaño de la imagen final (aprox. 180MB)
+- **Python 3.12-slim**: Imagen base oficial y ligera
+- **Usuario no privilegiado**: Ejecuta la aplicación como usuario `appuser` para mayor seguridad
+- **Gunicorn**: WSGI server de producción con soporte para múltiples workers y threads
+- **Healthcheck**: Verificación automática del estado de la aplicación
+- **Configuración flexible**: Puerto y workers configurables via variables de entorno
+
+### Recomendaciones para producción
+
+- Configurar Application Insights para monitoreo y telemetría
+- Ajustar `GUNICORN_WORKERS` según los CPU cores disponibles (recomendado: 2-4 x cores)
+- Usar proxy reverso (nginx/traefik) para SSL/TLS termination
+- Implementar autenticación y autorización en los endpoints
+- Configurar límites de recursos en el contenedor
+- Usar secretos seguros para las credenciales de CosmosDB (Azure Key Vault, Docker secrets, etc.)
 
 ## Seguridad
 
