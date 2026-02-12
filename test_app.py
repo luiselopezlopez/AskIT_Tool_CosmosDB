@@ -98,6 +98,64 @@ class TestFlaskApp(unittest.TestCase):
         self.assertEqual(len(data['results']), 2)
         self.assertEqual(data['results'][0]['id'], '1')
 
+    @patch('app.cosmos_client')
+    @patch('app.COSMOS_DATABASE', 'test_database')
+    def test_query_endpoint_resource_not_found(self, mock_cosmos_client):
+        """Test del endpoint /query cuando el contenedor no existe"""
+        from azure.cosmos import exceptions
+        
+        # Configurar mocks
+        mock_database = MagicMock()
+        mock_container = MagicMock()
+        mock_cosmos_client.get_database_client.return_value = mock_database
+        mock_database.get_container_client.return_value = mock_container
+        
+        # Simular error de recurso no encontrado
+        mock_container.query_items.side_effect = exceptions.CosmosResourceNotFoundError(
+            message="Container not found"
+        )
+        
+        response = self.client.post('/query',
+                                   data=json.dumps({
+                                       'contenedor': 'nonexistent_container',
+                                       'query': 'SELECT * FROM c'
+                                   }),
+                                   content_type='application/json')
+        
+        self.assertEqual(response.status_code, 404)
+        data = json.loads(response.data)
+        self.assertIn('error', data)
+        self.assertIn('Recurso no encontrado', data['error'])
+
+    @patch('app.cosmos_client')
+    @patch('app.COSMOS_DATABASE', 'test_database')
+    def test_query_endpoint_cosmos_http_error(self, mock_cosmos_client):
+        """Test del endpoint /query con error HTTP de CosmosDB"""
+        from azure.cosmos import exceptions
+        
+        # Configurar mocks
+        mock_database = MagicMock()
+        mock_container = MagicMock()
+        mock_cosmos_client.get_database_client.return_value = mock_database
+        mock_database.get_container_client.return_value = mock_container
+        
+        # Simular error HTTP de Cosmos
+        mock_container.query_items.side_effect = exceptions.CosmosHttpResponseError(
+            message="Query syntax error"
+        )
+        
+        response = self.client.post('/query',
+                                   data=json.dumps({
+                                       'contenedor': 'test_container',
+                                       'query': 'INVALID QUERY'
+                                   }),
+                                   content_type='application/json')
+        
+        self.assertEqual(response.status_code, 500)
+        data = json.loads(response.data)
+        self.assertIn('error', data)
+        self.assertIn('Error en la consulta de CosmosDB', data['error'])
+
 
 if __name__ == '__main__':
     unittest.main()

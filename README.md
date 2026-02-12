@@ -37,6 +37,7 @@ La aplicación requiere las siguientes variables de entorno:
 - `COSMOS_DB_ENDPOINT`: URL del endpoint de CosmosDB (e.g., `https://your-account.documents.azure.com:443/`)
 - `COSMOS_DB_KEY`: Primary o Secondary Key de CosmosDB
 - `COSMOS_DB_DATABASE`: Nombre de la base de datos en CosmosDB
+- `FLASK_DEBUG`: (Opcional) Habilitar modo debug de Flask. Por defecto: `False`. **No usar `True` en producción**
 
 ## Uso
 
