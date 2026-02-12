@@ -1,44 +1,14 @@
-# Git
 .git
 .gitignore
-
-# Python
-__pycache__
-*.py[cod]
-*$py.class
-*.so
-*.egg
-*.egg-info
-.pytest_cache
-.coverage
-htmlcov
-.tox
-.nox
-
-# Virtual environments
-.env
-.venv
-venv
-env
-ENV
-
-# IDEs
 .vscode
-.idea
+.venv
+__pycache__
+*.pyc
+*.pyo
+*.pyd
 *.swp
-*.swo
-*~
-
-# OS files
-.DS_Store
-Thumbs.db
-
-# Documentation
-README.md
-*.md
-
-# Test files
-test_*.py
-
-# Example files
-.env.example
+*.tmp
+.pytest_cache
+.python_packages
+local.settings.json
+.env

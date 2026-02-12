@@ -1,0 +1,323 @@
+{
+    "openapi": "3.0.3",
+    "info": {
+        "title": "CosmosDB Tools API",
+        "version": "0.1.0",
+        "description": "HTTP endpoints that expose Cosmos tools directly over Azure Functions."
+    },
+    "servers": [
+        {
+            "url": "https://askit-dev-mcp-cosmosdb.azurewebsites.net/api"
+        }
+    ],
+    "paths": {
+        "/health": {
+            "get": {
+                "operationId": "getHealth",
+                "summary": "API health",
+                "responses": {
+                    "200": {
+                        "description": "Service metadata",
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "name": "cosmosdb-tools-functions",
+                                    "version": "0.1.0",
+                                    "status": "ok"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/tools": {
+            "get": {
+                "operationId": "listTools",
+                "summary": "List available tools",
+                "responses": {
+                    "200": {
+                        "description": "Tool catalog",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "tools": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "FunctionKey": []
+                    }
+                ]
+            }
+        },
+        "/tools/cosmos_get_item": {
+            "post": {
+                "operationId": "execute_cosmos_get_item",
+                "summary": "Reads a Cosmos DB item by id and partition key.",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "id": {
+                                        "type": "string"
+                                    },
+                                    "partitionKey": {}
+                                },
+                                "required": [
+                                    "id",
+                                    "partitionKey"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Tool result"
+                    },
+                    "400": {
+                        "description": "Invalid request payload"
+                    },
+                    "500": {
+                        "description": "Server error"
+                    }
+                },
+                "security": [
+                    {
+                        "FunctionKey": []
+                    }
+                ]
+            }
+        },
+        "/tools/cosmos_query_items": {
+            "post": {
+                "operationId": "execute_cosmos_query_items",
+                "summary": "Executes a SQL query against the Cosmos DB container.",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "query": {
+                                        "type": "string"
+                                    },
+                                    "parameters": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object",
+                                            "properties": {
+                                                "name": {
+                                                    "type": "string"
+                                                },
+                                                "value": {}
+                                            },
+                                            "required": [
+                                                "name",
+                                                "value"
+                                            ]
+                                        }
+                                    },
+                                    "maxItemCount": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "maximum": 1000
+                                    }
+                                },
+                                "required": [
+                                    "query"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Tool result"
+                    },
+                    "400": {
+                        "description": "Invalid request payload"
+                    },
+                    "500": {
+                        "description": "Server error"
+                    }
+                },
+                "security": [
+                    {
+                        "FunctionKey": []
+                    }
+                ]
+            }
+        },
+        "/tools/cosmos_upsert_item": {
+            "post": {
+                "operationId": "execute_cosmos_upsert_item",
+                "summary": "Creates or updates a Cosmos DB item.",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "item": {
+                                        "type": "object"
+                                    }
+                                },
+                                "required": [
+                                    "item"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Tool result"
+                    },
+                    "400": {
+                        "description": "Invalid request payload"
+                    },
+                    "500": {
+                        "description": "Server error"
+                    }
+                },
+                "security": [
+                    {
+                        "FunctionKey": []
+                    }
+                ]
+            }
+        },
+        "/tools/cosmos_patch_item": {
+            "post": {
+                "operationId": "execute_cosmos_patch_item",
+                "summary": "Applies JSON patch operations to an item.",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "id": {
+                                        "type": "string"
+                                    },
+                                    "partitionKey": {},
+                                    "operations": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object",
+                                            "properties": {
+                                                "op": {
+                                                    "type": "string"
+                                                },
+                                                "path": {
+                                                    "type": "string"
+                                                },
+                                                "value": {}
+                                            },
+                                            "required": [
+                                                "op",
+                                                "path"
+                                            ]
+                                        }
+                                    }
+                                },
+                                "required": [
+                                    "id",
+                                    "partitionKey",
+                                    "operations"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Tool result"
+                    },
+                    "400": {
+                        "description": "Invalid request payload"
+                    },
+                    "500": {
+                        "description": "Server error"
+                    }
+                },
+                "security": [
+                    {
+                        "FunctionKey": []
+                    }
+                ]
+            }
+        },
+        "/tools/cosmos_delete_item": {
+            "post": {
+                "operationId": "execute_cosmos_delete_item",
+                "summary": "Deletes an item by id and partition key.",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "id": {
+                                        "type": "string"
+                                    },
+                                    "partitionKey": {}
+                                },
+                                "required": [
+                                    "id",
+                                    "partitionKey"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Tool result"
+                    },
+                    "400": {
+                        "description": "Invalid request payload"
+                    },
+                    "500": {
+                        "description": "Server error"
+                    }
+                },
+                "security": [
+                    {
+                        "FunctionKey": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "securitySchemes": {
+            "FunctionKey": {
+                "type": "apiKey",
+                "in": "header",
+                "name": "x-functions-key",
+                "description": "Azure Function key for AuthLevel.Function endpoints."
+            }
+        }
+    }
+}
