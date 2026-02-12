@@ -4,4 +4,4 @@ python-dotenv==1.0.0
 flasgger==0.9.7.1
 opencensus-ext-azure==1.1.9
 opencensus-ext-flask==0.8.1
-gunicorn==21.2.0
+gunicorn==22.0.0
