@@ -51,6 +51,15 @@ La aplicación se ejecutará en `http://localhost:5000`
 
 ### Endpoints
 
+#### OpenAPI/Swagger Documentation
+
+La API cuenta con documentación interactiva generada automáticamente con OpenAPI 3.0:
+
+- **GET /swagger.json**: Especificación OpenAPI en formato JSON
+- **GET /swagger**: Interfaz Swagger UI para explorar y probar la API de forma interactiva
+
+Accede a `http://localhost:5000/swagger` para explorar la documentación interactiva de la API.
+
 #### POST /query
 
 Ejecuta una consulta SQL contra un contenedor en CosmosDB.
