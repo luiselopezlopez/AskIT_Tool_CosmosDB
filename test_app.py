@@ -20,6 +20,30 @@ class TestFlaskApp(unittest.TestCase):
         self.assertEqual(data['status'], 'healthy')
         self.assertIn('cosmos_configured', data)
 
+    def test_swagger_json_endpoint(self):
+        """Test del endpoint /swagger.json"""
+        response = self.client.get('/swagger.json')
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.data)
+        # Verificar que la especificación OpenAPI contiene la información básica
+        self.assertIn('info', data)
+        self.assertIn('title', data['info'])
+        self.assertEqual(data['info']['title'], 'AskIT Tool CosmosDB API')
+        # Verificar que contiene los endpoints
+        self.assertIn('paths', data)
+        self.assertIn('/query', data['paths'])
+        self.assertIn('/health', data['paths'])
+
+    def test_swagger_ui_endpoint(self):
+        """Test del endpoint /swagger (Swagger UI)"""
+        response = self.client.get('/swagger')
+        self.assertEqual(response.status_code, 200)
+        # Verificar que retorna HTML
+        self.assertIn('text/html', response.content_type)
+        # Verificar que contiene elementos de Swagger UI
+        html_content = response.data.decode('utf-8')
+        self.assertIn('swagger', html_content.lower())
+
     @patch('app.cosmos_client', None)
     @patch('app.COSMOS_DATABASE', None)
     def test_query_endpoint_without_cosmos_config(self):
