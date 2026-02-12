@@ -1,5 +1,5 @@
 import unittest
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch, MagicMock, call
 import json
 from app import app
 
@@ -179,6 +179,60 @@ class TestFlaskApp(unittest.TestCase):
         data = json.loads(response.data)
         self.assertIn('error', data)
         self.assertIn('Error en la consulta de CosmosDB', data['error'])
+
+    @patch('app.logger')
+    @patch('app.cosmos_client')
+    @patch('app.COSMOS_DATABASE', 'test_database')
+    def test_query_endpoint_logs_telemetry_on_success(self, mock_cosmos_client, mock_logger):
+        """Test que verifica que se registra telemetría en consulta exitosa"""
+        # Configurar mocks
+        mock_database = MagicMock()
+        mock_container = MagicMock()
+        mock_cosmos_client.get_database_client.return_value = mock_database
+        mock_database.get_container_client.return_value = mock_container
+        
+        # Simular respuesta de CosmosDB
+        mock_items = [{'id': '1', 'name': 'Item 1'}]
+        mock_container.query_items.return_value = iter(mock_items)
+        
+        response = self.client.post('/query',
+                                   data=json.dumps({
+                                       'contenedor': 'test_container',
+                                       'query': 'SELECT * FROM c'
+                                   }),
+                                   content_type='application/json')
+        
+        self.assertEqual(response.status_code, 200)
+        # Verificar que se llamó al logger para registrar la solicitud
+        self.assertTrue(mock_logger.info.called)
+        # Verificar que se registró la recepción de la solicitud
+        info_calls = [str(call) for call in mock_logger.info.call_args_list]
+        self.assertTrue(any('Solicitud recibida' in str(call) for call in info_calls))
+        self.assertTrue(any('exitosamente' in str(call) for call in info_calls))
+
+    @patch('app.logger')
+    def test_query_endpoint_logs_telemetry_on_error(self, mock_logger):
+        """Test que verifica que se registra telemetría en errores"""
+        response = self.client.post('/query',
+                                   data=json.dumps({
+                                       'contenedor': 'test'
+                                   }),
+                                   content_type='application/json')
+        
+        self.assertEqual(response.status_code, 400)
+        # Verificar que se llamó al logger
+        self.assertTrue(mock_logger.info.called or mock_logger.warning.called)
+
+    @patch('app.logger')
+    def test_health_endpoint_logs_telemetry(self, mock_logger):
+        """Test que verifica que se registra telemetría en health check"""
+        response = self.client.get('/health')
+        self.assertEqual(response.status_code, 200)
+        # Verificar que se llamó al logger
+        self.assertTrue(mock_logger.info.called)
+        # Verificar que se registró el health check
+        info_calls = [str(call) for call in mock_logger.info.call_args_list]
+        self.assertTrue(any('Health check' in str(call) for call in info_calls))
 
 
 if __name__ == '__main__':

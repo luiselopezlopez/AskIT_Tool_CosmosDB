@@ -39,6 +39,28 @@ La aplicación requiere las siguientes variables de entorno:
 - `COSMOS_DB_DATABASE`: Nombre de la base de datos en CosmosDB
 - `FLASK_DEBUG`: (Opcional) Habilitar modo debug de Flask. Por defecto: `False`. **No usar `True` en producción**
 
+### Application Insights (Opcional)
+
+La aplicación incluye integración con Azure Application Insights para telemetría, métricas y logs. Para habilitarlo, configura una de las siguientes variables de entorno:
+
+- `APPLICATIONINSIGHTS_CONNECTION_STRING`: (Recomendado) Connection string completo de Application Insights
+  - Ejemplo: `InstrumentationKey=your-key;IngestionEndpoint=https://your-region.in.applicationinsights.azure.com/;LiveEndpoint=https://your-region.livediagnostics.monitor.azure.com/`
+  - Puedes obtenerlo desde el portal de Azure en tu recurso de Application Insights
+  
+- `APPINSIGHTS_INSTRUMENTATION_KEY`: (Legacy) Solo la Instrumentation Key
+  - Ejemplo: `your-instrumentation-key-here`
+
+**Telemetría registrada:**
+- Recepción de todas las solicitudes HTTP (automático)
+- Resultado de consultas exitosas en CosmosDB
+- Errores de validación (parámetros faltantes, JSON inválido)
+- Errores de configuración de CosmosDB
+- Errores de consulta en CosmosDB (recursos no encontrados, errores HTTP)
+- Errores internos del sistema
+- Health checks
+
+Si no se configura Application Insights, la aplicación funcionará normalmente sin telemetría.
+
 ## Uso
 
 ### Iniciar la aplicación
