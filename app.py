@@ -19,11 +19,12 @@ swagger_config = {
     ],
     "static_url_path": "/flasgger_static",
     "swagger_ui": True,
-    "specs_route": "/swagger"
+    "specs_route": "/swagger",
+    "openapi": "3.0.0"
 }
 
 swagger_template = {
-    "swagger": "2.0",
+    "openapi": "3.0.0",
     "info": {
         "title": "AskIT Tool CosmosDB API",
         "description": "API Flask para consultar una base de datos Azure CosmosDB",
@@ -32,10 +33,12 @@ swagger_template = {
             "name": "API Support"
         }
     },
-    "basePath": "/",
-    "schemes": ["http", "https"],
-    "consumes": ["application/json"],
-    "produces": ["application/json"]
+    "servers": [
+        {
+            "url": "/",
+            "description": "API Server"
+        }
+    ]
 }
 
 swagger = Swagger(app, config=swagger_config, template=swagger_template)
@@ -60,72 +63,79 @@ def query():
       - CosmosDB
     summary: Ejecutar consulta SQL en CosmosDB
     description: Ejecuta una consulta SQL contra un contenedor específico en Azure CosmosDB
-    parameters:
-      - in: body
-        name: body
-        required: true
-        description: Datos de la consulta
-        schema:
-          type: object
-          required:
-            - contenedor
-            - query
-          properties:
-            contenedor:
-              type: string
-              description: Nombre del contenedor en CosmosDB
-              example: "usuarios"
-            query:
-              type: string
-              description: Consulta SQL a ejecutar
-              example: "SELECT * FROM c WHERE c.status = 'active'"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - contenedor
+              - query
+            properties:
+              contenedor:
+                type: string
+                description: Nombre del contenedor en CosmosDB
+                example: "usuarios"
+              query:
+                type: string
+                description: Consulta SQL a ejecutar
+                example: "SELECT * FROM c WHERE c.status = 'active'"
     responses:
       200:
         description: Consulta ejecutada exitosamente
-        schema:
-          type: object
-          properties:
-            success:
-              type: boolean
-              example: true
-            count:
-              type: integer
-              example: 2
-            results:
-              type: array
-              items:
-                type: object
-              example:
-                - id: "1"
-                  name: "Item 1"
-                  status: "active"
-                - id: "2"
-                  name: "Item 2"
-                  status: "active"
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                count:
+                  type: integer
+                  example: 2
+                results:
+                  type: array
+                  items:
+                    type: object
+                  example:
+                    - id: "1"
+                      name: "Item 1"
+                      status: "active"
+                    - id: "2"
+                      name: "Item 2"
+                      status: "active"
       400:
         description: Error en los parámetros de entrada
-        schema:
-          type: object
-          properties:
-            error:
-              type: string
-              example: "El parámetro 'contenedor' es requerido"
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                error:
+                  type: string
+                  example: "El parámetro 'contenedor' es requerido"
       404:
         description: Recurso no encontrado
-        schema:
-          type: object
-          properties:
-            error:
-              type: string
-              example: "Recurso no encontrado: Container not found"
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                error:
+                  type: string
+                  example: "Recurso no encontrado: Container not found"
       500:
         description: Error en la ejecución de la consulta
-        schema:
-          type: object
-          properties:
-            error:
-              type: string
-              example: "Error en la consulta de CosmosDB"
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                error:
+                  type: string
+                  example: "Error en la consulta de CosmosDB"
     """
     try:
         # Obtener datos del request
@@ -201,15 +211,17 @@ def health():
     responses:
       200:
         description: Estado de la aplicación
-        schema:
-          type: object
-          properties:
-            status:
-              type: string
-              example: "healthy"
-            cosmos_configured:
-              type: boolean
-              example: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  example: "healthy"
+                cosmos_configured:
+                  type: boolean
+                  example: true
     """
     cosmos_configured = bool(cosmos_client and COSMOS_DATABASE)
     return jsonify({
